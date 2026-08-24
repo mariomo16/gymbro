@@ -89,10 +89,15 @@ export async function saveRoutineAction(
   } else {
     routineId = tx(() => {
       const r = run(
-        "INSERT INTO routines (user_id, name, created_at) VALUES (?, ?, ?)",
+        "INSERT INTO routines (user_id, name, active, created_at) VALUES (?, ?, 1, ?)",
         user.id,
         name,
         Date.now(),
+      );
+      run(
+        "UPDATE routines SET active = 0 WHERE user_id = ? AND id != ?",
+        user.id,
+        r.lastInsertRowid,
       );
       insertDays(r.lastInsertRowid, input.days);
       return r.lastInsertRowid;
@@ -102,6 +107,33 @@ export async function saveRoutineAction(
   revalidatePath("/routines");
   revalidatePath("/");
   return { ok: true, data: { id: routineId } };
+}
+
+export async function setRoutineActiveAction(
+  routineId: number,
+  active: boolean,
+): Promise<ActionResult> {
+  const user = await getSessionUser();
+  if (!user) return { ok: false, error: "No autenticado." };
+  const owned = get<{ id: number }>(
+    "SELECT id FROM routines WHERE id = ? AND user_id = ?",
+    routineId,
+    user.id,
+  );
+  if (!owned) return { ok: false, error: "Rutina no encontrada." };
+  tx(() => {
+    if (active) {
+      run("UPDATE routines SET active = 0 WHERE user_id = ?", user.id);
+    }
+    run(
+      "UPDATE routines SET active = ? WHERE id = ?",
+      active ? 1 : 0,
+      routineId,
+    );
+  });
+  revalidatePath("/routines");
+  revalidatePath("/");
+  return { ok: true };
 }
 
 function insertDays(routineId: number, days: RoutineInput["days"]) {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IconChevronRight, IconPlus } from "@/components/icons";
+import RoutineActiveToggle from "@/components/RoutineActiveToggle";
 import { getSessionUser } from "@/lib/auth";
 import { DAYS_SHORT } from "@/lib/dates";
 import { all } from "@/lib/db";
@@ -9,6 +10,7 @@ export const metadata = { title: "Rutinas" };
 type RoutineRow = {
   id: number;
   name: string;
+  active: number;
   days: string;
 };
 
@@ -19,12 +21,12 @@ export default async function RoutinesPage() {
   const routines = all<
     RoutineRow & { day_count: number; exercise_count: number }
   >(
-    `SELECT r.id, r.name,
+    `SELECT r.id, r.name, r.active,
       (SELECT COUNT(*) FROM routine_days rd WHERE rd.routine_id = r.id) AS day_count,
       (SELECT COUNT(*) FROM routine_exercises rex
        JOIN routine_days rd ON rd.id = rex.routine_day_id
        WHERE rd.routine_id = r.id) AS exercise_count
-    FROM routines r WHERE r.user_id = ? ORDER BY r.created_at DESC`,
+    FROM routines r WHERE r.user_id = ? ORDER BY r.active DESC, r.created_at DESC`,
     user.id,
   );
   const dayMap = new Map<number, number[]>();
@@ -70,34 +72,37 @@ export default async function RoutinesPage() {
       <ul className="flex flex-col gap-3">
         {routines.map((r) => (
           <li key={r.id}>
-            <Link
-              href={`/routines/${r.id}`}
-              className="card flex items-center gap-4 p-4 active:bg-raised"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">{r.name}</p>
-                <div className="mt-2 flex items-center gap-2.5">
-                  <div className="flex gap-1">
-                    {DAYS_SHORT.map((d, wd) => (
-                      <span
-                        key={d}
-                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
-                          (dayMap.get(r.id) ?? []).includes(wd)
-                            ? "bg-accent text-black"
-                            : "bg-raised text-mute/50"
-                        }`}
-                      >
-                        {d}
-                      </span>
-                    ))}
+            <div className="card flex items-center gap-3 p-4">
+              <Link
+                href={`/routines/${r.id}`}
+                className="flex min-w-0 flex-1 items-center gap-4 active:opacity-80"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{r.name}</p>
+                  <div className="mt-2 flex items-center gap-2.5">
+                    <div className="flex gap-1">
+                      {DAYS_SHORT.map((d, wd) => (
+                        <span
+                          key={d}
+                          className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
+                            (dayMap.get(r.id) ?? []).includes(wd)
+                              ? "bg-accent text-black"
+                              : "bg-raised text-mute/50"
+                          }`}
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-xs text-mute">
+                      {r.exercise_count} ejercicios
+                    </span>
                   </div>
-                  <span className="text-xs text-mute">
-                    {r.exercise_count} ejercicios
-                  </span>
                 </div>
-              </div>
-              <IconChevronRight className="h-5 w-5 shrink-0 text-mute" />
-            </Link>
+                <IconChevronRight className="h-5 w-5 shrink-0 text-mute" />
+              </Link>
+              <RoutineActiveToggle routineId={r.id} active={r.active === 1} />
+            </div>
           </li>
         ))}
       </ul>

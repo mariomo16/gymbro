@@ -102,6 +102,7 @@ function initSchema(db: Db) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL
     );
 
@@ -178,6 +179,18 @@ function initSchema(db: Db) {
   ensureColumn(db, "routine_exercises", "target_reps_min", "INTEGER");
   ensureColumn(db, "routine_exercises", "target_reps_max", "INTEGER");
   migrateRepsToRange(db);
+  migrateRoutinesActive(db);
+}
+
+function migrateRoutinesActive(db: Db) {
+  const cols = db.prepare("PRAGMA table_info(routines)").all() as {
+    name: string;
+  }[];
+  if (cols.some((c) => c.name === "active")) return;
+  db.exec("ALTER TABLE routines ADD COLUMN active INTEGER NOT NULL DEFAULT 0;");
+  db.exec(
+    "UPDATE routines SET active = 1 WHERE id IN (SELECT MAX(id) FROM routines GROUP BY user_id);",
+  );
 }
 
 function ensureColumn(db: Db, table: string, column: string, decl: string) {

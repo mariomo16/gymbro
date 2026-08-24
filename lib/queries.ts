@@ -43,7 +43,7 @@ export function getRoutineDaysForWeekday(
     `SELECT rd.id AS routine_day_id, r.name AS routine_name
      FROM routine_days rd
      JOIN routines r ON r.id = rd.routine_id
-     WHERE r.user_id = ? AND rd.weekday = ?
+     WHERE r.user_id = ? AND r.active = 1 AND rd.weekday = ?
      ORDER BY r.created_at`,
     userId,
     weekday,
@@ -74,7 +74,7 @@ export function getNextTrainingDay(user: User): { weekday: number } | null {
     const wd = (start + i) % 7;
     const hit = get<{ routine_day_id: number }>(
       `SELECT rd.id AS routine_day_id FROM routine_days rd JOIN routines r ON r.id = rd.routine_id
-       WHERE r.user_id = ? AND rd.weekday = ? LIMIT 1`,
+       WHERE r.user_id = ? AND r.active = 1 AND rd.weekday = ? LIMIT 1`,
       user.id,
       wd,
     );
