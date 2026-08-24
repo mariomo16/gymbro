@@ -15,20 +15,24 @@ export default function RoutineActiveToggle({
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={active ? "Desactivar rutina" : "Activar rutina"}
       disabled={pending}
-      aria-pressed={active}
       onClick={() =>
         start(async () => {
           await setRoutineActiveAction(routineId, !active);
         })
       }
-      className={`h-8 shrink-0 rounded-full px-3 text-[11px] font-bold uppercase tracking-wide transition-colors ${
-        active
-          ? "bg-accent text-black"
-          : "border border-line bg-raised text-mute"
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+        active ? "bg-accent" : "border border-line bg-raised"
       } ${pending ? "opacity-60" : ""}`}
     >
-      {active ? "Activa" : "Activar"}
+      <span
+        className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow-sm transition-[left] duration-150 ${
+          active ? "left-[1.375rem]" : "left-0.5"
+        }`}
+      />
     </button>
   );
 }
