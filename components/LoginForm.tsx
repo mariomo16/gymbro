@@ -11,6 +11,8 @@ const initial: AuthState = {};
 
 export default function LoginForm() {
   const [tab, setTab] = useState<"login" | "register">("login");
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [loginState, doLogin, loginPending] = useActionState(
     loginAction,
     initial,
@@ -52,6 +54,8 @@ export default function LoginForm() {
             </span>
             <input
               name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               autoComplete="name"
               maxLength={60}
               placeholder="Tu nombre"
@@ -65,6 +69,8 @@ export default function LoginForm() {
           </span>
           <input
             name="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             autoCapitalize="none"
             autoComplete="username"
