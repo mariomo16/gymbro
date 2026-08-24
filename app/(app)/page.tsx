@@ -28,6 +28,15 @@ import {
   getWeightOnDate,
 } from "@/lib/queries";
 
+function shortName(fullName: string): string {
+  const parts = fullName.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return fullName;
+  return `${parts[0]} ${parts
+    .slice(1)
+    .map((p) => `${p[0]}.`)
+    .join(" ")}`;
+}
+
 export default async function HomePage() {
   const user = await getSessionUser();
   if (!user) return null;
@@ -44,7 +53,7 @@ export default async function HomePage() {
       Promise.resolve(getWeightOnDate(user.id, today)),
     ]);
 
-  const displayName = user.name?.trim() || user.username;
+  const displayName = shortName(user.name?.trim() || user.username);
 
   return (
     <main className="flex flex-col gap-6">
