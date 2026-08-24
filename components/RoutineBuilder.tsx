@@ -13,6 +13,8 @@ type BuilderRow = {
   uid: string;
   exercise: ExerciseLite;
   targetSets: number | null;
+  targetRepsMin: number | null;
+  targetRepsMax: number | null;
 };
 
 type Props = {
@@ -23,12 +25,53 @@ type Props = {
     name: string;
     days: {
       weekday: number;
-      rows: { exercise: ExerciseLite; targetSets: number | null }[];
+      rows: {
+        exercise: ExerciseLite;
+        targetSets: number | null;
+        targetRepsMin: number | null;
+        targetRepsMax: number | null;
+      }[];
     }[];
   } | null;
 };
 
 const MAX_SETS = 15;
+const MAX_REPS = 100;
+
+function Stepper({
+  value,
+  max,
+  onChange,
+}: {
+  value: number | null;
+  max: number;
+  onChange: (delta: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1 rounded-full border border-line bg-raised p-0.5">
+      <button
+        type="button"
+        onClick={() => onChange(-1)}
+        aria-label="Bajar"
+        className="flex h-7 w-7 items-center justify-center rounded-full text-mute active:bg-card"
+      >
+        −
+      </button>
+      <span className="w-8 text-center text-xs font-bold tabular-nums">
+        {value == null ? "—" : value}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(1)}
+        disabled={(value ?? 0) >= max && value != null}
+        aria-label="Subir"
+        className="flex h-7 w-7 items-center justify-center rounded-full text-mute active:bg-card disabled:opacity-30"
+      >
+        +
+      </button>
+    </div>
+  );
+}
 let uidCounter = 0;
 function nextUid(prefix: string) {
   return `${prefix}-${++uidCounter}`;
@@ -69,7 +112,13 @@ export default function RoutineBuilder({ groups, exercises, initial }: Props) {
       ...prev,
       [wd]: [
         ...(prev[wd] ?? []),
-        { uid: nextUid(`add${wd}`), exercise, targetSets: null },
+        {
+          uid: nextUid(`add${wd}`),
+          exercise,
+          targetSets: null,
+          targetRepsMin: null,
+          targetRepsMax: null,
+        },
       ],
     }));
   }
@@ -81,21 +130,53 @@ export default function RoutineBuilder({ groups, exercises, initial }: Props) {
     }));
   }
 
-  function bumpSets(wd: number, index: number, delta: number) {
+  function bumpField(
+    wd: number,
+    index: number,
+    field: "targetSets",
+    max: number,
+    delta: number,
+  ) {
     setDays((prev) => ({
       ...prev,
       [wd]: (prev[wd] ?? []).map((row, i) =>
         i === index
           ? {
               ...row,
-              targetSets:
-                Math.min(
-                  MAX_SETS,
-                  Math.max(0, (row.targetSets ?? 0) + delta),
-                ) || null,
+              [field]:
+                Math.min(max, Math.max(0, (row[field] ?? 0) + delta)) || null,
             }
           : row,
       ),
+    }));
+  }
+
+  function bumpRepsMin(wd: number, index: number, delta: number) {
+    setDays((prev) => ({
+      ...prev,
+      [wd]: (prev[wd] ?? []).map((row, i) => {
+        if (i !== index) return row;
+        const min =
+          Math.min(MAX_REPS, Math.max(0, (row.targetRepsMin ?? 0) + delta)) ||
+          null;
+        const max =
+          min == null || (row.targetRepsMax != null && row.targetRepsMax < min)
+            ? min
+            : row.targetRepsMax;
+        return { ...row, targetRepsMin: min, targetRepsMax: max };
+      }),
+    }));
+  }
+
+  function bumpRepsMax(wd: number, index: number, delta: number) {
+    setDays((prev) => ({
+      ...prev,
+      [wd]: (prev[wd] ?? []).map((row, i) => {
+        if (i !== index || row.targetRepsMin == null) return row;
+        const next = (row.targetRepsMax ?? row.targetRepsMin) + delta;
+        const max = next < row.targetRepsMin ? null : Math.min(MAX_REPS, next);
+        return { ...row, targetRepsMax: max };
+      }),
     }));
   }
 
@@ -125,6 +206,8 @@ export default function RoutineBuilder({ groups, exercises, initial }: Props) {
           exercises: (days[wd] ?? []).map((row) => ({
             exerciseId: row.exercise.id,
             targetSets: row.targetSets,
+            targetRepsMin: row.targetRepsMin,
+            targetRepsMax: row.targetRepsMax,
           })),
         })),
       });
@@ -214,36 +297,38 @@ export default function RoutineBuilder({ groups, exercises, initial }: Props) {
                       <IconX className="h-4 w-4" />
                     </button>
                   </div>
-                  <div className="mt-2 flex items-center gap-2 pl-[18px]">
-                    <span className="text-xs text-mute">Series objetivo</span>
-                    <div className="ml-auto flex items-center gap-1 rounded-full border border-line bg-raised p-0.5">
-                      <button
-                        type="button"
-                        onClick={() => bumpSets(wd, i, -1)}
-                        className="flex h-7 w-7 items-center justify-center rounded-full text-mute active:bg-card"
-                      >
-                        −
-                      </button>
-                      <span className="w-8 text-center text-xs font-bold tabular-nums">
-                        {row.targetSets == null ? "—" : row.targetSets}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => bumpSets(wd, i, 1)}
-                        disabled={
-                          (row.targetSets ?? 0) >= MAX_SETS &&
-                          row.targetSets != null
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 pl-[18px]">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-mute">Series</span>
+                      <Stepper
+                        value={row.targetSets}
+                        max={MAX_SETS}
+                        onChange={(d) =>
+                          bumpField(wd, i, "targetSets", MAX_SETS, d)
                         }
-                        className="flex h-7 w-7 items-center justify-center rounded-full text-mute active:bg-card disabled:opacity-30"
-                      >
-                        +
-                      </button>
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-mute">Reps</span>
+                      <Stepper
+                        value={row.targetRepsMin}
+                        max={MAX_REPS}
+                        onChange={(d) => bumpRepsMin(wd, i, d)}
+                      />
+                      <span className="text-xs font-bold text-mute">–</span>
+                      <Stepper
+                        value={
+                          row.targetRepsMin == null ? null : row.targetRepsMax
+                        }
+                        max={MAX_REPS}
+                        onChange={(d) => bumpRepsMax(wd, i, d)}
+                      />
                     </div>
                     <button
                       type="button"
                       onClick={() => moveUp(wd, i)}
                       disabled={i === 0}
-                      className="rounded-lg px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-mute disabled:opacity-20"
+                      className="ml-auto rounded-lg px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-mute disabled:opacity-20"
                     >
                       ↑
                     </button>

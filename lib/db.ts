@@ -117,7 +117,9 @@ function initSchema(db: Db) {
       routine_day_id INTEGER NOT NULL REFERENCES routine_days(id) ON DELETE CASCADE,
       exercise_id INTEGER NOT NULL REFERENCES exercises(id),
       position INTEGER NOT NULL,
-      target_sets INTEGER
+      target_sets INTEGER,
+      target_reps_min INTEGER,
+      target_reps_max INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS workouts (
@@ -153,28 +155,55 @@ function initSchema(db: Db) {
     );
   `);
 
-  const count = db.prepare("SELECT COUNT(*) AS n FROM muscle_groups").get() as {
-    n: number;
-  };
-  if (!Number(count.n)) {
-    const insert = db.prepare(
-      "INSERT OR IGNORE INTO muscle_groups (name) VALUES (?)",
-    );
-    for (const name of [
-      "Pecho",
-      "Espalda",
-      "Hombros",
-      "Bíceps",
-      "Tríceps",
-      "Antebrazo",
-      "Cuádriceps",
-      "Femoral",
-      "Glúteos",
-      "Gemelos",
-      "Abdomen",
-      "Cardio",
-    ]) {
-      insert.run(name);
+  const insert = db.prepare(
+    "INSERT OR IGNORE INTO muscle_groups (name) VALUES (?)",
+  );
+  for (const name of [
+    "Pecho",
+    "Espalda",
+    "Hombros",
+    "Bíceps",
+    "Tríceps",
+    "Antebrazo",
+    "Cuádriceps",
+    "Femoral",
+    "Glúteos",
+    "Gemelos",
+    "Abdomen",
+    "Cardio",
+    "Trapecio",
+  ]) {
+    insert.run(name);
+  }
+
+  ensureColumn(db, "routine_exercises", "target_reps_min", "INTEGER");
+  ensureColumn(db, "routine_exercises", "target_reps_max", "INTEGER");
+  migrateRepsToRange(db);
+}
+
+function ensureColumn(db: Db, table: string, column: string, decl: string) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as {
+    name: string;
+  }[];
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl};`);
+  }
+}
+
+function migrateRepsToRange(db: Db) {
+  const has = (column: string) =>
+    (
+      db.prepare("PRAGMA table_info(routine_exercises)").all() as {
+        name: string;
+      }[]
+    ).some((c) => c.name === column);
+  if (has("target_reps")) {
+    if (!has("target_reps_min")) {
+      db.exec(
+        "ALTER TABLE routine_exercises RENAME COLUMN target_reps TO target_reps_min;",
+      );
+    } else {
+      db.exec("ALTER TABLE routine_exercises DROP COLUMN target_reps;");
     }
   }
 }

@@ -10,7 +10,12 @@ export type RoutineInput = {
   name: string;
   days: {
     weekday: number;
-    exercises: { exerciseId: number; targetSets: number | null }[];
+    exercises: {
+      exerciseId: number;
+      targetSets: number | null;
+      targetRepsMin: number | null;
+      targetRepsMax: number | null;
+    }[];
   }[];
 };
 
@@ -44,6 +49,23 @@ export async function saveRoutineAction(
       const ts = row.targetSets == null ? null : Number(row.targetSets);
       if (ts != null && (!Number.isInteger(ts) || ts < 1 || ts > 30)) {
         return { ok: false, error: "Series objetivo entre 1 y 30." };
+      }
+      const min = row.targetRepsMin == null ? null : Number(row.targetRepsMin);
+      if (min != null && (!Number.isInteger(min) || min < 1 || min > 100)) {
+        return { ok: false, error: "Repeticiones objetivo entre 1 y 100." };
+      }
+      const max = row.targetRepsMax == null ? null : Number(row.targetRepsMax);
+      if (max != null) {
+        if (!Number.isInteger(max) || max < 1 || max > 100) {
+          return { ok: false, error: "Repeticiones objetivo entre 1 y 100." };
+        }
+        if (min == null || max < min) {
+          return {
+            ok: false,
+            error:
+              "El máximo de repeticiones no puede ser menor que el mínimo.",
+          };
+        }
       }
     }
   }
@@ -92,11 +114,13 @@ function insertDays(routineId: number, days: RoutineInput["days"]) {
     );
     day.exercises.forEach((row, i) => {
       run(
-        "INSERT INTO routine_exercises (routine_day_id, exercise_id, position, target_sets) VALUES (?, ?, ?, ?)",
+        "INSERT INTO routine_exercises (routine_day_id, exercise_id, position, target_sets, target_reps_min, target_reps_max) VALUES (?, ?, ?, ?, ?, ?)",
         rd.lastInsertRowid,
         row.exerciseId,
         i,
         row.targetSets == null ? null : Number(row.targetSets),
+        row.targetRepsMin == null ? null : Number(row.targetRepsMin),
+        row.targetRepsMax == null ? null : Number(row.targetRepsMax),
       );
     });
   }

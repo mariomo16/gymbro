@@ -11,6 +11,7 @@ const COLORS = [
   "bg-teal-400",
   "bg-indigo-400",
   "bg-pink-400",
+  "bg-yellow-400",
 ];
 
 export default function GroupDot({

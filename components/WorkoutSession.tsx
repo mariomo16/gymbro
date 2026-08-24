@@ -20,6 +20,7 @@ import {
   removeWorkoutExerciseAction,
 } from "@/lib/actions/workouts";
 import { formatVolume } from "@/lib/dates";
+import { formatRepRange } from "@/lib/format";
 import type { ExerciseLite, MuscleGroup } from "@/lib/types";
 
 type Row = {
@@ -37,6 +38,8 @@ type SessionExercise = {
   name: string;
   muscle_group_id: number;
   target_sets: number | null;
+  target_reps_min: number | null;
+  target_reps_max: number | null;
   rows: Row[];
 };
 
@@ -73,6 +76,8 @@ export default function WorkoutSession({
     name: string;
     muscle_group_id: number;
     target_sets: number | null;
+    target_reps_min: number | null;
+    target_reps_max: number | null;
     prev: { reps: number; weight: number } | null;
     sets: { id: number; reps: number; weight: number }[];
   }[];
@@ -86,6 +91,8 @@ export default function WorkoutSession({
       name: we.name,
       muscle_group_id: we.muscle_group_id,
       target_sets: we.target_sets,
+      target_reps_min: we.target_reps_min,
+      target_reps_max: we.target_reps_max,
       rows: toRows(we.sets),
     })),
   );
@@ -277,7 +284,15 @@ export default function WorkoutSession({
             <h3 className="min-w-0 flex-1 truncate font-semibold">{we.name}</h3>
             {we.target_sets != null && (
               <span className="rounded-md bg-raised px-2 py-0.5 text-[11px] font-semibold text-mute">
-                objetivo {we.target_sets} ×
+                {(() => {
+                  const reps = formatRepRange(
+                    we.target_reps_min,
+                    we.target_reps_max,
+                  );
+                  return reps
+                    ? `objetivo ${we.target_sets} × ${reps}`
+                    : `objetivo ${we.target_sets} ×`;
+                })()}
               </span>
             )}
             <button
@@ -395,6 +410,8 @@ export default function WorkoutSession({
                   name: added.name,
                   muscle_group_id: added.muscle_group_id,
                   target_sets: added.target_sets,
+                  target_reps_min: added.target_reps_min,
+                  target_reps_max: added.target_reps_max,
                   rows: [],
                 },
               ]);

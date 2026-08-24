@@ -28,9 +28,11 @@ export default async function EditRoutinePage({ params }: Params) {
     weekday: number;
     exercise_id: number;
     target_sets: number | null;
+    target_reps_min: number | null;
+    target_reps_max: number | null;
     position: number;
   }>(
-    `SELECT rd.weekday, rex.exercise_id, rex.target_sets, rex.position
+    `SELECT rd.weekday, rex.exercise_id, rex.target_sets, rex.target_reps_min, rex.target_reps_max, rex.position
      FROM routine_days rd JOIN routine_exercises rex ON rex.routine_day_id = rd.id
      WHERE rd.routine_id = ? ORDER BY rd.weekday, rex.position`,
     routineId,
@@ -40,13 +42,23 @@ export default async function EditRoutinePage({ params }: Params) {
 
   const groupedDays = new Map<
     number,
-    { exercise: (typeof exercises)[number]; targetSets: number | null }[]
+    {
+      exercise: (typeof exercises)[number];
+      targetSets: number | null;
+      targetRepsMin: number | null;
+      targetRepsMax: number | null;
+    }[]
   >();
   for (const row of dayRows) {
     const exercise = byId.get(row.exercise_id);
     if (!exercise) continue;
     const list = groupedDays.get(row.weekday) ?? [];
-    list.push({ exercise, targetSets: row.target_sets });
+    list.push({
+      exercise,
+      targetSets: row.target_sets,
+      targetRepsMin: row.target_reps_min,
+      targetRepsMax: row.target_reps_max,
+    });
     groupedDays.set(row.weekday, list);
   }
 

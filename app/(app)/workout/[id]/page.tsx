@@ -51,13 +51,29 @@ export default async function WorkoutPage({ params }: Params) {
      WHERE we.workout_id = ? ORDER BY we.position`,
     workoutId,
   );
-  const targetMap = new Map<number, number | null>();
+  const targetMap = new Map<
+    number,
+    {
+      sets: number | null;
+      repsMin: number | null;
+      repsMax: number | null;
+    }
+  >();
   if (workout.routine_day_id != null) {
-    for (const row of all<{ exercise_id: number; target_sets: number | null }>(
-      "SELECT exercise_id, target_sets FROM routine_exercises WHERE routine_day_id = ?",
+    for (const row of all<{
+      exercise_id: number;
+      target_sets: number | null;
+      target_reps_min: number | null;
+      target_reps_max: number | null;
+    }>(
+      "SELECT exercise_id, target_sets, target_reps_min, target_reps_max FROM routine_exercises WHERE routine_day_id = ?",
       workout.routine_day_id,
     )) {
-      targetMap.set(row.exercise_id, row.target_sets);
+      targetMap.set(row.exercise_id, {
+        sets: row.target_sets,
+        repsMin: row.target_reps_min,
+        repsMax: row.target_reps_max,
+      });
     }
   }
 
@@ -71,16 +87,21 @@ export default async function WorkoutPage({ params }: Params) {
     setsByWe.set(s.workout_exercise_id, list);
   }
 
-  const exercises = weRows.map((we) => ({
-    id: we.id,
-    exercise_id: we.exercise_id,
-    name: we.name,
-    muscle_group_id: we.muscle_group_id,
-    position: we.position,
-    target_sets: targetMap.get(we.exercise_id) ?? null,
-    prev: getLastSetForExercise(user.id, we.exercise_id),
-    sets: (setsByWe.get(we.id) ?? []).sort((a, b) => a.id - b.id),
-  }));
+  const exercises = weRows.map((we) => {
+    const t = targetMap.get(we.exercise_id);
+    return {
+      id: we.id,
+      exercise_id: we.exercise_id,
+      name: we.name,
+      muscle_group_id: we.muscle_group_id,
+      position: we.position,
+      target_sets: t?.sets ?? null,
+      target_reps_min: t?.repsMin ?? null,
+      target_reps_max: t?.repsMax ?? null,
+      prev: getLastSetForExercise(user.id, we.exercise_id),
+      sets: (setsByWe.get(we.id) ?? []).sort((a, b) => a.id - b.id),
+    };
+  });
 
   return (
     <WorkoutSession

@@ -27,6 +27,8 @@ export type TodayDay = {
     exercise_name: string;
     muscle_group_id: number;
     target_sets: number | null;
+    target_reps_min: number | null;
+    target_reps_max: number | null;
   }[];
 };
 
@@ -53,8 +55,10 @@ export function getRoutineDaysForWeekday(
       exercise_name: string;
       muscle_group_id: number;
       target_sets: number | null;
+      target_reps_min: number | null;
+      target_reps_max: number | null;
     }>(
-      `SELECT rex.exercise_id, e.name AS exercise_name, e.muscle_group_id, rex.target_sets
+      `SELECT rex.exercise_id, e.name AS exercise_name, e.muscle_group_id, rex.target_sets, rex.target_reps_min, rex.target_reps_max
        FROM routine_exercises rex JOIN exercises e ON e.id = rex.exercise_id
        WHERE rex.routine_day_id = ? ORDER BY rex.position`,
       d.routine_day_id,

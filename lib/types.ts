@@ -7,7 +7,11 @@ export type ExerciseLite = {
 };
 export type RoutineDayRow = {
   weekday: number;
-  rows: { exercise: ExerciseLite; targetSets: number | null }[];
+  rows: {
+    exercise: ExerciseLite;
+    targetSets: number | null;
+    targetReps: number | null;
+  }[];
 };
 export type WorkoutSet = {
   id: number;
@@ -23,4 +27,6 @@ export type WorkoutExercise = {
   muscle_group_id: number;
   position: number;
   target_sets: number | null;
+  target_reps_min: number | null;
+  target_reps_max: number | null;
 };

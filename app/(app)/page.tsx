@@ -20,6 +20,7 @@ import {
   mondayIndex,
   todayISO,
 } from "@/lib/dates";
+import { formatRepRange } from "@/lib/format";
 import {
   getActiveWorkout,
   getNextTrainingDay,
@@ -118,7 +119,15 @@ export default async function HomePage() {
                     <span className="truncate">{ex.exercise_name}</span>
                     {ex.target_sets != null && (
                       <span className="ml-auto shrink-0 rounded-md bg-raised px-2 py-0.5 text-[11px] font-semibold">
-                        {ex.target_sets} ×
+                        {(() => {
+                          const reps = formatRepRange(
+                            ex.target_reps_min,
+                            ex.target_reps_max,
+                          );
+                          return reps
+                            ? `${ex.target_sets} × ${reps}`
+                            : `${ex.target_sets} ×`;
+                        })()}
                       </span>
                     )}
                   </li>

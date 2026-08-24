@@ -149,15 +149,26 @@ export async function addWorkoutExerciseAction(
 
   const target =
     workout.routine_day_id == null
-      ? null
-      : (get<{ target_sets: number | null }>(
-          `SELECT rex.target_sets FROM routine_exercises rex
-       JOIN routine_days rd ON rd.id = rex.routine_day_id
-       JOIN routines r ON r.id = rd.routine_id
-       WHERE rd.id = ? AND rex.exercise_id = ?`,
-          workout.routine_day_id,
-          exerciseId,
-        )?.target_sets ?? null);
+      ? { sets: null, repsMin: null, repsMax: null }
+      : (() => {
+          const row = get<{
+            target_sets: number | null;
+            target_reps_min: number | null;
+            target_reps_max: number | null;
+          }>(
+            `SELECT rex.target_sets, rex.target_reps_min, rex.target_reps_max FROM routine_exercises rex
+        JOIN routine_days rd ON rd.id = rex.routine_day_id
+        JOIN routines r ON r.id = rd.routine_id
+        WHERE rd.id = ? AND rex.exercise_id = ?`,
+            workout.routine_day_id,
+            exerciseId,
+          );
+          return {
+            sets: row?.target_sets ?? null,
+            repsMin: row?.target_reps_min ?? null,
+            repsMax: row?.target_reps_max ?? null,
+          };
+        })();
 
   const r = run(
     "INSERT INTO workout_exercises (workout_id, exercise_id, position) VALUES (?, ?, ?)",
@@ -174,7 +185,9 @@ export async function addWorkoutExerciseAction(
       name: exercise.name,
       muscle_group_id: exercise.muscle_group_id,
       position: pos,
-      target_sets: target,
+      target_sets: target.sets,
+      target_reps_min: target.repsMin,
+      target_reps_max: target.repsMax,
     },
   };
 }
