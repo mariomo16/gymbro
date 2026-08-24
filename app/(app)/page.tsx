@@ -5,6 +5,7 @@ import {
   IconChevronRight,
   IconFlame,
   IconLogout,
+  IconPlay,
   IconPlus,
 } from "@/components/icons";
 import LiveTimer from "@/components/LiveTimer";
@@ -145,6 +146,20 @@ export default async function HomePage() {
                     </span>
                     Entrenado hoy
                   </div>
+                ) : activeWorkout ? (
+                  activeWorkout.routine_day_id === day.routine_day_id ? (
+                    <Link
+                      href={`/workout/${activeWorkout.id}`}
+                      className="btn-primary h-12 w-full"
+                    >
+                      <IconPlay className="h-4 w-4" />
+                      Continuar entreno
+                    </Link>
+                  ) : (
+                    <div className="flex h-12 w-full items-center justify-center rounded-[0.875rem] bg-raised text-sm font-semibold text-mute">
+                      Entreno en curso
+                    </div>
+                  )
                 ) : (
                   <StartWorkoutButton routineDayId={day.routine_day_id} />
                 )}

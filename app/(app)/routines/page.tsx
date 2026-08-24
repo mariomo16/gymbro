@@ -45,7 +45,7 @@ export default async function RoutinesPage() {
         <Link
           href="/routines/new"
           aria-label="Nueva rutina"
-          className="btn-primary h-11 w-11 !p-0"
+          className="btn-primary h-11 w-11 p-0!"
         >
           <IconPlus className="h-5 w-5" />
         </Link>

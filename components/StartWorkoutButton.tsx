@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { IconPlay } from "@/components/icons";
 import { startWorkoutAction } from "@/lib/actions/workouts";
@@ -13,6 +14,7 @@ export default function StartWorkoutButton({
   label?: string;
   compact?: boolean;
 }) {
+  const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +30,7 @@ export default function StartWorkoutButton({
               routineDayId: routineDayId ?? null,
             });
             if (!r.ok) setError(r.error);
+            else if (r.data) router.push(`/workout/${r.data.id}`);
           })
         }
         className={`btn-primary ${compact ? "h-10 px-4 text-sm" : "h-12 w-full"}`}
