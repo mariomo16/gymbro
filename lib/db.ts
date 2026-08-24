@@ -161,17 +161,16 @@ function initSchema(db: Db) {
   for (const name of [
     "Pecho",
     "Espalda",
+    "Trapecio",
     "Hombros",
     "Bíceps",
     "Tríceps",
-    "Antebrazo",
+    "Antebrazos",
     "Cuádriceps",
-    "Femoral",
+    "Isquiosurales",
     "Glúteos",
     "Gemelos",
-    "Abdomen",
-    "Cardio",
-    "Trapecio",
+    "Core",
   ]) {
     insert.run(name);
   }
