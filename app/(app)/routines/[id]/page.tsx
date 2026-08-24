@@ -4,7 +4,7 @@ import { IconChevronLeft } from "@/components/icons";
 import RoutineBuilder from "@/components/RoutineBuilder";
 import { getSessionUser } from "@/lib/auth";
 import { all, get } from "@/lib/db";
-import { getUserExercises, getUserGroups } from "@/lib/queries";
+import { getExercises, getUserGroups } from "@/lib/queries";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -35,7 +35,7 @@ export default async function EditRoutinePage({ params }: Params) {
      WHERE rd.routine_id = ? ORDER BY rd.weekday, rex.position`,
     routineId,
   );
-  const exercises = getUserExercises(user.id);
+  const exercises = getExercises();
   const byId = new Map(exercises.map((e) => [e.id, e]));
 
   const groupedDays = new Map<

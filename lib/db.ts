@@ -69,6 +69,7 @@ export function tx<T>(fn: () => T): T {
 }
 
 function initSchema(db: Db) {
+  migrateExercisesToGlobal(db);
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,11 +93,9 @@ function initSchema(db: Db) {
 
     CREATE TABLE IF NOT EXISTS exercises (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       muscle_group_id INTEGER NOT NULL REFERENCES muscle_groups(id),
-      name TEXT NOT NULL,
-      created_at INTEGER NOT NULL,
-      UNIQUE (user_id, name)
+      name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      created_at INTEGER NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS routines (
@@ -178,4 +177,53 @@ function initSchema(db: Db) {
       insert.run(name);
     }
   }
+}
+
+function migrateExercisesToGlobal(db: Db) {
+  const cols = db.prepare("PRAGMA table_info(exercises)").all() as {
+    name: string;
+  }[];
+  if (!cols.some((c) => c.name === "user_id")) return;
+
+  db.exec("PRAGMA foreign_keys = OFF;");
+  db.exec("PRAGMA legacy_alter_table = ON;");
+  db.exec("ALTER TABLE exercises RENAME TO exercises_migrating;");
+  db.exec("PRAGMA legacy_alter_table = OFF;");
+
+  db.exec(`
+    CREATE TEMP TABLE ex_map AS
+    SELECT e.id AS old_id,
+           (SELECT MIN(k.id) FROM exercises_migrating k
+            WHERE k.name COLLATE NOCASE = e.name COLLATE NOCASE) AS new_id
+    FROM exercises_migrating e;
+  `);
+  db.exec(`
+    UPDATE workout_exercises SET exercise_id =
+      COALESCE((SELECT m.new_id FROM ex_map m
+                WHERE m.old_id = workout_exercises.exercise_id), exercise_id);
+  `);
+  db.exec(`
+    UPDATE routine_exercises SET exercise_id =
+      COALESCE((SELECT m.new_id FROM ex_map m
+                WHERE m.old_id = routine_exercises.exercise_id), exercise_id);
+  `);
+
+  db.exec(`
+    CREATE TABLE exercises (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      muscle_group_id INTEGER NOT NULL REFERENCES muscle_groups(id),
+      name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      created_at INTEGER NOT NULL
+    );
+  `);
+  db.exec(`
+    INSERT INTO exercises (id, muscle_group_id, name, created_at)
+    SELECT id, muscle_group_id, name, created_at FROM exercises_migrating
+    WHERE id IN (SELECT new_id FROM ex_map)
+    ORDER BY id;
+  `);
+
+  db.exec("DROP TABLE exercises_migrating;");
+  db.exec("DROP TABLE ex_map;");
+  db.exec("PRAGMA foreign_keys = ON;");
 }

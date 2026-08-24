@@ -3,8 +3,8 @@ import WorkoutSession from "@/components/WorkoutSession";
 import { getSessionUser } from "@/lib/auth";
 import { all, get } from "@/lib/db";
 import {
+  getExercises,
   getLastSetForExercise,
-  getUserExercises,
   getUserGroups,
   getWorkoutSets,
 } from "@/lib/queries";
@@ -89,7 +89,7 @@ export default async function WorkoutPage({ params }: Params) {
       title={title}
       initialExercises={exercises}
       groups={getUserGroups()}
-      exercises={getUserExercises(user.id)}
+      exercises={getExercises()}
     />
   );
 }

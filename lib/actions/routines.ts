@@ -35,12 +35,12 @@ export async function saveRoutineAction(
     if (!day.exercises.length)
       return { ok: false, error: "Cada día necesita al menos un ejercicio." };
     for (const row of day.exercises) {
-      const owned = get<{ id: number }>(
-        "SELECT id FROM exercises WHERE id = ? AND user_id = ?",
+      const exists = get<{ id: number }>(
+        "SELECT id FROM exercises WHERE id = ?",
         Number(row.exerciseId),
-        user.id,
       );
-      if (!owned) return { ok: false, error: "Hay ejercicios que no existen." };
+      if (!exists)
+        return { ok: false, error: "Hay ejercicios que no existen." };
       const ts = row.targetSets == null ? null : Number(row.targetSets);
       if (ts != null && (!Number.isInteger(ts) || ts < 1 || ts > 30)) {
         return { ok: false, error: "Series objetivo entre 1 y 30." };

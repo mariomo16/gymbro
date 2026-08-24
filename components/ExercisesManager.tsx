@@ -98,7 +98,7 @@ export default function ExercisesManager({
 
       {grouped.length === 0 && (
         <p className="card p-6 text-center text-sm text-mute">
-          Todavía no tienes ejercicios. Crea el primero arriba.
+          Todavía no hay ejercicios. Crea el primero arriba.
         </p>
       )}
 

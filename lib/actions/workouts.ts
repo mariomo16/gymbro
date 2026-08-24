@@ -129,9 +129,8 @@ export async function addWorkoutExerciseAction(
     return { ok: false, error: "Entrenamiento no activo." };
 
   const exercise = get<{ id: number; name: string; muscle_group_id: number }>(
-    "SELECT id, name, muscle_group_id FROM exercises WHERE id = ? AND user_id = ?",
+    "SELECT id, name, muscle_group_id FROM exercises WHERE id = ?",
     exerciseId,
-    user.id,
   );
   if (!exercise) return { ok: false, error: "Ejercicio no encontrado." };
 

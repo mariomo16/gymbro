@@ -6,10 +6,9 @@ export function getUserGroups(): MuscleGroup[] {
   return all<MuscleGroup>("SELECT id, name FROM muscle_groups ORDER BY id");
 }
 
-export function getUserExercises(userId: number): ExerciseLite[] {
+export function getExercises(): ExerciseLite[] {
   return all<ExerciseLite>(
-    "SELECT id, name, muscle_group_id FROM exercises WHERE user_id = ? ORDER BY name COLLATE NOCASE",
-    userId,
+    "SELECT id, name, muscle_group_id FROM exercises ORDER BY name COLLATE NOCASE",
   );
 }
 

@@ -30,16 +30,14 @@ export async function createExerciseAction(input: {
   if (!group) return { ok: false, error: "Grupo muscular inválido." };
 
   const dup = get<{ id: number }>(
-    "SELECT id FROM exercises WHERE user_id = ? AND name = ? COLLATE NOCASE",
-    user.id,
+    "SELECT id FROM exercises WHERE name = ? COLLATE NOCASE",
     name,
   );
   if (dup)
-    return { ok: false, error: "Ya tienes un ejercicio con ese nombre." };
+    return { ok: false, error: "Ya existe un ejercicio con ese nombre." };
 
   const r = run(
-    "INSERT INTO exercises (user_id, muscle_group_id, name, created_at) VALUES (?, ?, ?, ?)",
-    user.id,
+    "INSERT INTO exercises (muscle_group_id, name, created_at) VALUES (?, ?, ?)",
     group.id,
     name,
     Date.now(),
@@ -57,40 +55,28 @@ export async function deleteExerciseAction(
   const user = await getSessionUser();
   if (!user) return { ok: false, error: "No autenticado." };
 
-  const owned = get<{ id: number }>(
-    "SELECT id FROM exercises WHERE id = ? AND user_id = ?",
+  const exists = get<{ id: number }>(
+    "SELECT id FROM exercises WHERE id = ?",
     exerciseId,
-    user.id,
   );
-  if (!owned) return { ok: false, error: "Ejercicio no encontrado." };
+  if (!exists) return { ok: false, error: "Ejercicio no encontrado." };
 
   const inRoutine = get<{ n: number }>(
-    `SELECT COUNT(*) AS n FROM routine_exercises rex
-     JOIN routine_days rd ON rd.id = rex.routine_day_id
-     JOIN routines r ON r.id = rd.routine_id
-     WHERE rex.exercise_id = ? AND r.user_id = ?`,
+    "SELECT COUNT(*) AS n FROM routine_exercises WHERE exercise_id = ?",
     exerciseId,
-    user.id,
   );
   const inWorkout = get<{ n: number }>(
-    `SELECT COUNT(*) AS n FROM workout_exercises we
-     JOIN workouts w ON w.id = we.workout_id
-     WHERE we.exercise_id = ? AND w.user_id = ?`,
+    "SELECT COUNT(*) AS n FROM workout_exercises WHERE exercise_id = ?",
     exerciseId,
-    user.id,
   );
   if ((inRoutine?.n ?? 0) > 0 || (inWorkout?.n ?? 0) > 0) {
     return {
       ok: false,
-      error: "No puedes borrarlo: está usado en rutinas o entrenamientos.",
+      error: "No se puede borrar: está en uso en rutinas o entrenamientos.",
     };
   }
 
-  run(
-    "DELETE FROM exercises WHERE id = ? AND user_id = ?",
-    exerciseId,
-    user.id,
-  );
+  run("DELETE FROM exercises WHERE id = ?", exerciseId);
   revalidatePath("/exercises");
   return { ok: true };
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { IconChevronLeft } from "@/components/icons";
 import RoutineBuilder from "@/components/RoutineBuilder";
 import { getSessionUser } from "@/lib/auth";
-import { getUserExercises, getUserGroups } from "@/lib/queries";
+import { getExercises, getUserGroups } from "@/lib/queries";
 
 export const metadata = { title: "Nueva rutina" };
 
@@ -22,10 +22,7 @@ export default async function NewRoutinePage() {
         </Link>
         <h1 className="text-2xl font-bold tracking-tight">Nueva rutina</h1>
       </header>
-      <RoutineBuilder
-        groups={getUserGroups()}
-        exercises={getUserExercises(user.id)}
-      />
+      <RoutineBuilder groups={getUserGroups()} exercises={getExercises()} />
     </main>
   );
 }
