@@ -28,11 +28,17 @@ function plain<T>(row: T): T {
 }
 
 export function all<T>(sql: string, ...params: SqlValue[]): T[] {
-  return (getDb().prepare(sql).all(...params) as T[]).map(plain);
+  return (
+    getDb()
+      .prepare(sql)
+      .all(...params) as T[]
+  ).map(plain);
 }
 
 export function get<T>(sql: string, ...params: SqlValue[]): T | undefined {
-  const row = getDb().prepare(sql).get(...params) as T | undefined;
+  const row = getDb()
+    .prepare(sql)
+    .get(...params) as T | undefined;
   return row === undefined ? undefined : plain(row);
 }
 
