@@ -18,14 +18,8 @@ export default async function RoutinesPage() {
   const user = await getSessionUser();
   if (!user) return null;
 
-  const routines = all<
-    RoutineRow & { day_count: number; exercise_count: number }
-  >(
-    `SELECT r.id, r.name, r.active,
-      (SELECT COUNT(*) FROM routine_days rd WHERE rd.routine_id = r.id) AS day_count,
-      (SELECT COUNT(*) FROM routine_exercises rex
-       JOIN routine_days rd ON rd.id = rex.routine_day_id
-       WHERE rd.routine_id = r.id) AS exercise_count
+  const routines = all<RoutineRow>(
+    `SELECT r.id, r.name, r.active
     FROM routines r WHERE r.user_id = ? ORDER BY r.active DESC, r.created_at DESC`,
     user.id,
   );
@@ -75,33 +69,26 @@ export default async function RoutinesPage() {
             <div className="card flex items-center gap-3 p-4">
               <Link
                 href={`/routines/${r.id}`}
-                className="flex min-w-0 flex-1 items-center gap-4 active:opacity-80"
+                className="min-w-0 flex-1 active:opacity-80"
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{r.name}</p>
-                  <div className="mt-2 flex items-center gap-2.5">
-                    <div className="flex gap-1">
-                      {DAYS_SHORT.map((d, wd) => (
-                        <span
-                          key={d}
-                          className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
-                            (dayMap.get(r.id) ?? []).includes(wd)
-                              ? "bg-accent text-black"
-                              : "bg-raised text-mute/50"
-                          }`}
-                        >
-                          {d}
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-xs text-mute">
-                      {r.exercise_count} ejercicios
+                <p className="truncate font-semibold">{r.name}</p>
+                <div className="mt-2 flex gap-1">
+                  {DAYS_SHORT.map((d, wd) => (
+                    <span
+                      key={d}
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
+                        (dayMap.get(r.id) ?? []).includes(wd)
+                          ? "bg-accent text-black"
+                          : "bg-raised text-mute/50"
+                      }`}
+                    >
+                      {d}
                     </span>
-                  </div>
+                  ))}
                 </div>
-                <IconChevronRight className="h-5 w-5 shrink-0 text-mute" />
               </Link>
               <RoutineActiveToggle routineId={r.id} active={r.active === 1} />
+              <IconChevronRight className="h-5 w-5 shrink-0 text-mute" />
             </div>
           </li>
         ))}
