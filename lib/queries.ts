@@ -83,6 +83,18 @@ export function getNextTrainingDay(user: User): { weekday: number } | null {
   return null;
 }
 
+export function getDoneRoutineDayIdsToday(userId: number): number[] {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  return all<{ routine_day_id: number }>(
+    `SELECT DISTINCT routine_day_id FROM workouts
+     WHERE user_id = ? AND ended_at IS NOT NULL AND started_at >= ?
+       AND routine_day_id IS NOT NULL`,
+    userId,
+    startOfDay.getTime(),
+  ).map((r) => r.routine_day_id);
+}
+
 export type WorkoutSummary = {
   id: number;
   started_at: number;

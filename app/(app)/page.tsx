@@ -1,6 +1,7 @@
 import Link from "next/link";
 import GroupDot from "@/components/GroupDot";
 import {
+  IconCheck,
   IconChevronRight,
   IconFlame,
   IconLogout,
@@ -23,6 +24,7 @@ import {
 import { formatRepRange } from "@/lib/format";
 import {
   getActiveWorkout,
+  getDoneRoutineDayIdsToday,
   getNextTrainingDay,
   getRecentWorkouts,
   getRoutineDaysForWeekday,
@@ -45,14 +47,16 @@ export default async function HomePage() {
   const now = new Date();
   const weekday = mondayIndex(now);
   const today = todayISO();
-  const [todaysDays, activeWorkout, nextDay, recent, todayWeight] =
+  const [todaysDays, activeWorkout, nextDay, recent, todayWeight, doneDayIds] =
     await Promise.all([
       getRoutineDaysForWeekday(user.id, weekday),
       getActiveWorkout(user.id),
       getNextTrainingDay(user),
       getRecentWorkouts(user.id, 5),
       Promise.resolve(getWeightOnDate(user.id, today)),
+      Promise.resolve(getDoneRoutineDayIdsToday(user.id)),
     ]);
+  const doneDays = new Set(doneDayIds);
 
   const displayName = shortName(user.name?.trim() || user.username);
 
@@ -134,7 +138,16 @@ export default async function HomePage() {
                 ))}
               </ul>
               <div className="mt-4">
-                <StartWorkoutButton routineDayId={day.routine_day_id} />
+                {doneDays.has(day.routine_day_id) ? (
+                  <div className="flex h-12 w-full items-center justify-center gap-2 rounded-[0.875rem] bg-raised text-sm font-semibold text-mute">
+                    <span className="text-accent">
+                      <IconCheck className="h-4 w-4" />
+                    </span>
+                    Entrenado hoy
+                  </div>
+                ) : (
+                  <StartWorkoutButton routineDayId={day.routine_day_id} />
+                )}
               </div>
             </div>
           ))
