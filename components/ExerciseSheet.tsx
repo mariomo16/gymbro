@@ -155,7 +155,10 @@ export default function ExerciseSheet({
           ) : (
             <button
               type="button"
-              onClick={() => setCreating(true)}
+              onClick={() => {
+                setNewName(query.trim());
+                setCreating(true);
+              }}
               className="chip mb-4 h-11 w-full gap-2 px-4 text-sm text-accent"
             >
               <IconPlus className="h-4 w-4" />
