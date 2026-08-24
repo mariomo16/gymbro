@@ -1,2 +1,2 @@
 - [] Autorrellenar el nombre del ejercicio al crearlo desde una búsqueda sin resultados.
-- [] Añadir las repeticiones esperadas como campo opcional, independiente de las series.
+- [x] Añadir las repeticiones esperadas como campo opcional, independiente de las series.
