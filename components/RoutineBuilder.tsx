@@ -193,9 +193,14 @@ export default function RoutineBuilder({ groups, exercises, initial }: Props) {
     setError(null);
     if (!name.trim()) return setError("Ponle un nombre a la rutina.");
     if (!enabledDays.length) return setError("Elige al menos un día.");
-    for (const wd of enabledDays) {
-      if (!days[wd]?.length)
-        return setError(`Añade ejercicios al ${DAYS_LONG[wd].toLowerCase()}.`);
+    const emptyDays = enabledDays.filter((wd) => !days[wd]?.length);
+    if (emptyDays.length) {
+      const names = emptyDays.map((wd) => DAYS_LONG[wd].toLowerCase());
+      return setError(
+        emptyDays.length === 1
+          ? `Añade ejercicios al ${names[0]}.`
+          : `Añade ejercicios a: ${names.join(", ")}.`,
+      );
     }
     start(async () => {
       const r = await saveRoutineAction({
@@ -349,13 +354,15 @@ export default function RoutineBuilder({ groups, exercises, initial }: Props) {
         );
       })}
 
-      {error && (
-        <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {error}
-        </p>
-      )}
-
       <div className="sticky bottom-24 flex flex-col gap-2">
+        {error && (
+          <p
+            role="alert"
+            className="fade-in rounded-xl border border-red-500/30 bg-[#2a1215] px-4 py-3 text-sm font-medium text-red-400 shadow-lg"
+          >
+            {error}
+          </p>
+        )}
         <button
           type="button"
           onClick={save}
