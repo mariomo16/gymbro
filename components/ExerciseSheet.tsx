@@ -30,7 +30,10 @@ export default function ExerciseSheet({
   const [pending, start] = useTransition();
 
   const allExercises = useMemo(
-    () => [...exercises, ...extra],
+    () => [
+      ...exercises,
+      ...extra.filter((e) => !exercises.some((p) => p.id === e.id)),
+    ],
     [exercises, extra],
   );
   const effectiveGroupId = newGroupId ?? groups[0]?.id ?? null;
