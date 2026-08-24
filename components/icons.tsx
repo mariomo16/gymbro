@@ -161,3 +161,22 @@ export function IconFlame({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconEye({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function IconEyeOff({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M10.7 5.7A9.8 9.8 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17.6 17.6 0 0 1-3 3.8M6.6 6.6C4 8.4 2.5 12 2.5 12S6 18.5 12 18.5a9 9 0 0 0 4.2-1" />
+      <path d="m3 3 18 18" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </svg>
+  );
+}

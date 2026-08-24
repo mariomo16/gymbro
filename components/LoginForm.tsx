@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { IconEye, IconEyeOff } from "@/components/icons";
 import {
   type AuthState,
   loginAction,
@@ -13,6 +14,7 @@ export default function LoginForm() {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loginState, doLogin, loginPending] = useActionState(
     loginAction,
     initial,
@@ -82,14 +84,32 @@ export default function LoginForm() {
           <span className="text-xs font-semibold uppercase tracking-wider text-mute">
             Contraseña
           </span>
-          <input
-            name="password"
-            type="password"
-            required
-            autoComplete={tab === "login" ? "current-password" : "new-password"}
-            placeholder="••••••••"
-            className="input"
-          />
+          <div className="relative">
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              autoComplete={
+                tab === "login" ? "current-password" : "new-password"
+              }
+              placeholder="••••••••"
+              className="input pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={
+                showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+              }
+              className="absolute top-1/2 right-1.5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-mute active:bg-raised"
+            >
+              {showPassword ? (
+                <IconEyeOff className="h-5 w-5" />
+              ) : (
+                <IconEye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </label>
 
         {state.error && (
