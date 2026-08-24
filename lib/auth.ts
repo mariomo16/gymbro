@@ -1,5 +1,5 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { cache } from "react";
 import { get, run } from "@/lib/db";
 import type { User } from "@/lib/types";
@@ -36,11 +36,12 @@ export function createSession(userId: number): string {
 }
 
 export async function setSessionCookie(token: string) {
-  const store = await cookies();
+  const [store, h] = await Promise.all([cookies(), headers()]);
+  const proto = h.get("x-forwarded-proto")?.split(",")[0]?.trim();
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: proto === "https",
     maxAge: SESSION_TTL_MS / 1000,
     path: "/",
   });
