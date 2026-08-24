@@ -32,17 +32,18 @@ export default async function HistoryPage() {
     user.id,
   );
 
-  const groups: { label: string; items: Row[] }[] = [];
+  const groups: { key: string; label: string; items: Row[] }[] = [];
   for (const w of workouts) {
-    const label = new Intl.DateTimeFormat("es-ES", {
+    const raw = new Intl.DateTimeFormat("es-ES", {
       month: "long",
       year: "numeric",
     }).format(new Date(w.started_at));
     const last = groups[groups.length - 1];
-    if (last && last.label === label) last.items.push(w);
+    if (last && last.key === raw) last.items.push(w);
     else
       groups.push({
-        label: label.charAt(0).toUpperCase() + label.slice(1),
+        key: raw,
+        label: raw.charAt(0).toUpperCase() + raw.slice(1),
         items: [w],
       });
   }
