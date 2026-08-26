@@ -323,48 +323,45 @@ export default function WorkoutSession({
 
         return (
           <section key={we.id} className="card overflow-hidden">
-            <button
-              type="button"
-              className="flex w-full cursor-pointer items-center gap-2 border-b border-line px-4 py-3 text-left active:bg-raised/50"
-              onClick={() => toggleCollapse(we.id)}
+            <div
+              className="flex items-center gap-2 border-b border-line px-4 py-3"
             >
-              <GroupDot groupId={we.muscle_group_id} />
-              <h3 className="min-w-0 flex-1 truncate font-semibold">
-                {we.name}
-              </h3>
-              {we.target_sets != null && (
-                <span className="rounded-md bg-raised px-2 py-0.5 text-[11px] font-semibold text-mute">
-                  {(() => {
-                    const reps = formatRepRange(
-                      we.target_reps_min,
-                      we.target_reps_max,
-                    );
-                    return reps
-                      ? `objetivo ${we.target_sets} × ${reps}`
-                      : `objetivo ${we.target_sets} ×`;
-                  })()}
-                </span>
-              )}
-              <IconChevronRight className="h-4 w-4 text-mute" />
-              <span
-                role="button"
-                tabIndex={0}
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left active:bg-raised/50"
+                onClick={() => toggleCollapse(we.id)}
+              >
+                <GroupDot groupId={we.muscle_group_id} />
+                <h3 className="min-w-0 flex-1 truncate font-semibold">
+                  {we.name}
+                </h3>
+                {we.target_sets != null && (
+                  <span className="rounded-md bg-raised px-2 py-0.5 text-[11px] font-semibold text-mute">
+                    {(() => {
+                      const reps = formatRepRange(
+                        we.target_reps_min,
+                        we.target_reps_max,
+                      );
+                      return reps
+                        ? `objetivo ${we.target_sets} × ${reps}`
+                        : `objetivo ${we.target_sets} ×`;
+                    })()}
+                  </span>
+                )}
+                <IconChevronRight className="h-4 w-4 text-mute" />
+              </button>
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   removeExercise(we);
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.stopPropagation();
-                    removeExercise(we);
-                  }
-                }}
                 aria-label={`Quitar ${we.name}`}
-                className="-mr-1.5 flex h-8 w-8 items-center justify-center rounded-full text-mute active:bg-raised"
+                className="-mr-1.5 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-mute active:bg-raised"
               >
                 <IconX className="h-4 w-4" />
-              </span>
-            </button>
+              </button>
+            </div>
 
             <ul className="px-3 pt-2">
               {we.rows.map((row, i) => {
