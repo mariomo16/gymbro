@@ -324,32 +324,27 @@ export default function WorkoutSession({
         return (
           <section key={we.id} className="card overflow-hidden">
             <div
-              className="flex items-center gap-2 border-b border-line px-4 py-3"
+              className="flex cursor-pointer items-center gap-2 border-b border-line px-4 py-3 active:bg-raised/50"
+              onClick={() => toggleCollapse(we.id)}
             >
-              <button
-                type="button"
-                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left active:bg-raised/50"
-                onClick={() => toggleCollapse(we.id)}
-              >
-                <GroupDot groupId={we.muscle_group_id} />
-                <h3 className="min-w-0 flex-1 truncate font-semibold">
-                  {we.name}
-                </h3>
-                {we.target_sets != null && (
-                  <span className="rounded-md bg-raised px-2 py-0.5 text-[11px] font-semibold text-mute">
-                    {(() => {
-                      const reps = formatRepRange(
-                        we.target_reps_min,
-                        we.target_reps_max,
-                      );
-                      return reps
-                        ? `objetivo ${we.target_sets} × ${reps}`
-                        : `objetivo ${we.target_sets} ×`;
-                    })()}
-                  </span>
-                )}
-                <IconChevronRight className="h-4 w-4 text-mute" />
-              </button>
+              <GroupDot groupId={we.muscle_group_id} />
+              <h3 className="min-w-0 flex-1 truncate font-semibold">
+                {we.name}
+              </h3>
+              {we.target_sets != null && (
+                <span className="rounded-md bg-raised px-2 py-0.5 text-[11px] font-semibold text-mute">
+                  {(() => {
+                    const reps = formatRepRange(
+                      we.target_reps_min,
+                      we.target_reps_max,
+                    );
+                    return reps
+                      ? `objetivo ${we.target_sets} × ${reps}`
+                      : `objetivo ${we.target_sets} ×`;
+                  })()}
+                </span>
+              )}
+              <IconChevronRight className="h-4 w-4 text-mute" />
               <button
                 type="button"
                 onClick={(e) => {
