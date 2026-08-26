@@ -5,7 +5,9 @@ import { useState, useTransition } from "react";
 import ExerciseSheet from "@/components/ExerciseSheet";
 import GroupDot from "@/components/GroupDot";
 import {
+  IconChevronDown,
   IconChevronLeft,
+  IconChevronRight,
   IconPlus,
   IconTrash,
   IconX,
@@ -99,6 +101,7 @@ export default function WorkoutSession({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
 
   const totalVolume = exs.reduce(
     (acc, we) =>
@@ -214,6 +217,18 @@ export default function WorkoutSession({
     });
   }
 
+  function toggleCollapse(weId: number) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(weId)) {
+        next.delete(weId);
+      } else {
+        next.add(weId);
+      }
+      return next;
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <header className="sticky top-0 z-30 -mx-5 border-b border-line bg-bg/90 px-5 pt-[max(env(safe-area-inset-top),0.75rem)] pb-3 backdrop-blur-xl">
@@ -277,109 +292,145 @@ export default function WorkoutSession({
         </div>
       )}
 
-      {exs.map((we) => (
-        <section key={we.id} className="card overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-line px-4 py-3">
-            <GroupDot groupId={we.muscle_group_id} />
-            <h3 className="min-w-0 flex-1 truncate font-semibold">{we.name}</h3>
-            {we.target_sets != null && (
-              <span className="rounded-md bg-raised px-2 py-0.5 text-[11px] font-semibold text-mute">
-                {(() => {
-                  const reps = formatRepRange(
-                    we.target_reps_min,
-                    we.target_reps_max,
-                  );
-                  return reps
-                    ? `objetivo ${we.target_sets} × ${reps}`
-                    : `objetivo ${we.target_sets} ×`;
-                })()}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => removeExercise(we)}
-              aria-label={`Quitar ${we.name}`}
-              className="-mr-1.5 flex h-8 w-8 items-center justify-center rounded-full text-mute active:bg-raised"
-            >
-              <IconX className="h-4 w-4" />
-            </button>
-          </div>
+      {exs.map((we) => {
+        const isCollapsed = collapsed.has(we.id);
+        const savedSets = we.rows.filter((r) => r.id != null).length;
+        const totalSets = we.rows.length;
 
-          <ul className="px-3 pt-2">
-            {we.rows.map((row, i) => {
-              const saved =
-                row.id != null &&
-                row.reps === row.snapReps &&
-                row.weight === row.snapWeight;
-              return (
-                <li key={row.key} className="mb-1.5 flex items-center gap-2">
-                  <span
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
-                      saved
-                        ? "bg-accent-soft text-accent"
-                        : "bg-raised text-mute"
-                    }`}
-                  >
-                    S{i + 1}
-                  </span>
-                  <input
-                    value={row.reps}
-                    onChange={(e) =>
-                      patchRow(we.id, row.key, { reps: e.target.value })
-                    }
-                    onBlur={() => commit(we, row)}
-                    onKeyDown={(e) => e.key === "Enter" && commit(we, row)}
-                    inputMode="numeric"
-                    placeholder="reps"
-                    aria-label="Repeticiones"
-                    className={`input h-11 flex-1 px-3 text-center font-semibold ${
-                      row.id != null && row.reps !== row.snapReps
-                        ? "border-accent/60"
-                        : ""
-                    }`}
-                  />
-                  <span className="text-mute">×</span>
-                  <input
-                    value={row.weight}
-                    onChange={(e) =>
-                      patchRow(we.id, row.key, { weight: e.target.value })
-                    }
-                    onBlur={() => commit(we, row)}
-                    onKeyDown={(e) => e.key === "Enter" && commit(we, row)}
-                    inputMode="decimal"
-                    placeholder="kg"
-                    aria-label="Peso en kg"
-                    className={`input h-11 w-20 px-3 text-center font-semibold ${
-                      row.id != null && row.weight !== row.snapWeight
-                        ? "border-accent/60"
-                        : ""
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => delSet(we.id, row)}
-                    aria-label="Borrar serie"
-                    className="flex h-11 w-8 shrink-0 items-center justify-center rounded-xl text-mute/60 active:text-red-400"
-                  >
-                    <IconTrash className="h-4 w-4" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="p-3 pt-1">
-            <button
-              type="button"
-              onClick={() => addRow(we)}
-              className="chip h-10 w-full gap-1.5 text-sm text-accent"
+        if (isCollapsed) {
+          return (
+            <section
+              key={we.id}
+              className="card cursor-pointer overflow-hidden active:bg-raised/50"
+              onClick={() => toggleCollapse(we.id)}
             >
-              <IconPlus className="h-4 w-4" />
-              Serie
-            </button>
-          </div>
-        </section>
-      ))}
+              <div className="flex items-center gap-2 px-4 py-3">
+                <GroupDot groupId={we.muscle_group_id} />
+                <h3 className="min-w-0 flex-1 truncate font-semibold">
+                  {we.name}
+                </h3>
+                <span className="text-xs text-mute">
+                  {savedSets}/{totalSets} series
+                </span>
+                <IconChevronDown className="h-4 w-4 text-mute" />
+              </div>
+            </section>
+          );
+        }
+
+        return (
+          <section key={we.id} className="card overflow-hidden">
+            <div
+              className="flex cursor-pointer items-center gap-2 border-b border-line px-4 py-3 active:bg-raised/50"
+              onClick={() => toggleCollapse(we.id)}
+            >
+              <GroupDot groupId={we.muscle_group_id} />
+              <h3 className="min-w-0 flex-1 truncate font-semibold">
+                {we.name}
+              </h3>
+              {we.target_sets != null && (
+                <span className="rounded-md bg-raised px-2 py-0.5 text-[11px] font-semibold text-mute">
+                  {(() => {
+                    const reps = formatRepRange(
+                      we.target_reps_min,
+                      we.target_reps_max,
+                    );
+                    return reps
+                      ? `objetivo ${we.target_sets} × ${reps}`
+                      : `objetivo ${we.target_sets} ×`;
+                  })()}
+                </span>
+              )}
+              <IconChevronRight className="h-4 w-4 text-mute" />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeExercise(we);
+                }}
+                aria-label={`Quitar ${we.name}`}
+                className="-mr-1.5 flex h-8 w-8 items-center justify-center rounded-full text-mute active:bg-raised"
+              >
+                <IconX className="h-4 w-4" />
+              </button>
+            </div>
+
+            <ul className="px-3 pt-2">
+              {we.rows.map((row, i) => {
+                const saved =
+                  row.id != null &&
+                  row.reps === row.snapReps &&
+                  row.weight === row.snapWeight;
+                return (
+                  <li key={row.key} className="mb-1.5 flex items-center gap-2">
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+                        saved
+                          ? "bg-accent-soft text-accent"
+                          : "bg-raised text-mute"
+                      }`}
+                    >
+                      S{i + 1}
+                    </span>
+                    <input
+                      value={row.reps}
+                      onChange={(e) =>
+                        patchRow(we.id, row.key, { reps: e.target.value })
+                      }
+                      onBlur={() => commit(we, row)}
+                      onKeyDown={(e) => e.key === "Enter" && commit(we, row)}
+                      inputMode="numeric"
+                      placeholder="reps"
+                      aria-label="Repeticiones"
+                      className={`input h-11 flex-1 px-3 text-center font-semibold ${
+                        row.id != null && row.reps !== row.snapReps
+                          ? "border-accent/60"
+                          : ""
+                      }`}
+                    />
+                    <span className="text-mute">×</span>
+                    <input
+                      value={row.weight}
+                      onChange={(e) =>
+                        patchRow(we.id, row.key, { weight: e.target.value })
+                      }
+                      onBlur={() => commit(we, row)}
+                      onKeyDown={(e) => e.key === "Enter" && commit(we, row)}
+                      inputMode="decimal"
+                      placeholder="kg"
+                      aria-label="Peso en kg"
+                      className={`input h-11 w-20 px-3 text-center font-semibold ${
+                        row.id != null && row.weight !== row.snapWeight
+                          ? "border-accent/60"
+                          : ""
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => delSet(we.id, row)}
+                      aria-label="Borrar serie"
+                      className="flex h-11 w-8 shrink-0 items-center justify-center rounded-xl text-mute/60 active:text-red-400"
+                    >
+                      <IconTrash className="h-4 w-4" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="p-3 pt-1">
+              <button
+                type="button"
+                onClick={() => addRow(we)}
+                className="chip h-10 w-full gap-1.5 text-sm text-accent"
+              >
+                <IconPlus className="h-4 w-4" />
+                Serie
+              </button>
+            </div>
+          </section>
+        );
+      })}
 
       <button
         type="button"
