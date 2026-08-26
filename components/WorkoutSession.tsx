@@ -301,27 +301,31 @@ export default function WorkoutSession({
           return (
             <section
               key={we.id}
-              className="card cursor-pointer overflow-hidden active:bg-raised/50"
-              onClick={() => toggleCollapse(we.id)}
+              className="card overflow-hidden"
             >
-              <div className="flex items-center gap-2 px-4 py-3">
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center gap-2 px-4 py-3 active:bg-raised/50"
+                onClick={() => toggleCollapse(we.id)}
+              >
                 <GroupDot groupId={we.muscle_group_id} />
-                <h3 className="min-w-0 flex-1 truncate font-semibold">
+                <h3 className="min-w-0 flex-1 truncate font-semibold text-left">
                   {we.name}
                 </h3>
                 <span className="text-xs text-mute">
                   {savedSets}/{totalSets} series
                 </span>
                 <IconChevronDown className="h-4 w-4 text-mute" />
-              </div>
+              </button>
             </section>
           );
         }
 
         return (
           <section key={we.id} className="card overflow-hidden">
-            <div
-              className="flex cursor-pointer items-center gap-2 border-b border-line px-4 py-3 active:bg-raised/50"
+            <button
+              type="button"
+              className="flex w-full cursor-pointer items-center gap-2 border-b border-line px-4 py-3 text-left active:bg-raised/50"
               onClick={() => toggleCollapse(we.id)}
             >
               <GroupDot groupId={we.muscle_group_id} />
@@ -342,18 +346,25 @@ export default function WorkoutSession({
                 </span>
               )}
               <IconChevronRight className="h-4 w-4 text-mute" />
-              <button
-                type="button"
+              <span
+                role="button"
+                tabIndex={0}
                 onClick={(e) => {
                   e.stopPropagation();
                   removeExercise(we);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.stopPropagation();
+                    removeExercise(we);
+                  }
                 }}
                 aria-label={`Quitar ${we.name}`}
                 className="-mr-1.5 flex h-8 w-8 items-center justify-center rounded-full text-mute active:bg-raised"
               >
                 <IconX className="h-4 w-4" />
-              </button>
-            </div>
+              </span>
+            </button>
 
             <ul className="px-3 pt-2">
               {we.rows.map((row, i) => {
