@@ -143,6 +143,18 @@ input[type="number"] {
   .fade-in {
     animation: fade-in 0.18s ease-out;
   }
+
+  .collapse-content {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.25s ease;
+  }
+  .collapse-content[data-state="collapsed"] {
+    grid-template-rows: 0fr;
+  }
+  .collapse-content > * {
+    overflow: hidden;
+  }
 }
 
 @keyframes sheet-in {
